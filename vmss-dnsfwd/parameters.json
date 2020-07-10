@@ -1,0 +1,24 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vmssName": {
+      "value": "vmss-dnsfwd-centralus-001"
+    },
+    "vnetId": {
+      "value": "/subscriptions/69924db1-a0fe-43f6-b1ad-86bb3248f4a1/resourceGroups/rg-hub-network-centralus/providers/Microsoft.Network/virtualNetworks/vnet-hub-centralus-001"
+    },
+    "subnetName": {
+      "value": "snet-dnsfwd-centralus-001"
+    },
+    "stgAcctName": {
+      "value": "pahealyhublogs"
+    },
+    "sshUser": {
+      "value": "azureuser"
+    },
+    "sshKey": {
+      "value": ""
+    }
+  }
+}

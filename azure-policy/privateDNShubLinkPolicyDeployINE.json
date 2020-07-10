@@ -1,0 +1,90 @@
+{
+  "properties": {
+    "displayName": "Private DNS - deployINE virtual network link",
+    "policyType": "Custom",
+    "mode": "All",
+    "description": "Automatically create a link to a selected virtual network when a private DNS zone is created. This is useful when DNS zones need to be linked to a hub virtual network where DNS forwarders have been deployed.",
+    "parameters": {
+      "virtualNetworkLinkName": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Virtual Network Link Name",
+          "description": "The name of the virtual network link to create"
+        }
+      },
+      "targetVnet": {
+        "type": "String",
+        "metadata": {
+          "displayName": "Target virtual network",
+          "description": "The target virtual network for Private DNS zone connections"
+        }
+      }
+    },
+    "policyRule": {
+      "if": {
+        "field": "type",
+        "equals": "Microsoft.Network/privateDnsZones"
+      },
+      "then": {
+        "effect": "deployIfNotExists",
+        "details": {
+          "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+          "name": "[parameters('virtualNetworkLinkName')]",
+          "roleDefinitionIds": [
+            "/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7"
+          ],
+          "existenceCondition": {
+            "field": "Microsoft.Network/privateDnsZones/virtualNetworkLinks/virtualNetwork.id",
+            "equals": "[parameters('targetVnet')]"
+          },
+          "deployment": {
+            "properties": {
+              "mode": "incremental",
+              "template": {
+                "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                "contentVersion": "1.0.0.0",
+                "parameters": {
+                  "privateDNSZoneName": {
+                    "type": "string"
+                  },
+                  "virtualNetworkLinkName": {
+                    "type": "string"
+                  },
+                  "targetVnetId": {
+                    "type": "string"
+                  }
+                },
+                "resources": [
+                  {
+                    "name": "[concat(parameters('privateDNSZoneName'), '/', parameters('virtualNetworkLinkName'))]",
+                    "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+                    "apiVersion": "2018-09-01",
+                    "tags": {},
+                    "location": "global",
+                    "properties": {
+                      "virtualNetwork": {
+                        "id": "[parameters('targetVnetId')]"
+                      },
+                      "registrationEnabled": false
+                    }
+                  }
+                ]
+              },
+              "parameters": {
+                "privateDNSZoneName": {
+                  "value": "[field('name')]"
+                },
+                "virtualNetworkLinkName": {
+                  "value": "[parameters('virtualNetworkLinkName')]"
+                },
+                "targetVnetId": {
+                  "value": "[parameters('targetVnet')]"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

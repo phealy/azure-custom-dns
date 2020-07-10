@@ -1,0 +1,171 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "vmssName": {
+      "metadata": { "description": "Name of the virtual machine scale set" },
+      "type": "String"
+    },
+    "vnetId": {
+      "metadata": { "description": "Resource ID of the virtual network to deploy into" },
+      "type": "String"
+    },
+    "subnetName": {
+      "metadata": { "description": "Name of the subnet to use" },
+      "type": "String"
+    },
+    "stgAcctName": {
+      "metadata": { "description": "Name of the storage account to use for boot diagnostics" },
+      "type": "String"
+    },
+    "sshUser": {
+      "defaultValue": "azureuser",
+      "metadata": { "description": "SSH admin username" },
+      "type": "string"
+    },
+    "sshKey": {
+      "metadata": { "description": "SSH public key for admin access" },
+      "type": "String"
+    },
+    "customData": {
+      "metadata": { "description": "The custom-data.yaml file to use at build time" },
+      "type": "String"
+    }
+  },
+  "variables": {},
+  "resources": [
+    {
+      "type": "Microsoft.Compute/virtualMachineScaleSets",
+      "apiVersion": "2019-07-01",
+      "name": "[parameters('vmssName')]",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Standard_B1s",
+        "tier": "Standard",
+        "capacity": 3
+      },
+      "zones": [
+        "1",
+        "2",
+        "3"
+      ],
+      "properties": {
+        "singlePlacementGroup": false,
+        "upgradePolicy": {
+          "mode": "Automatic",
+          "rollingUpgradePolicy": {
+            "maxBatchInstancePercent": 20,
+            "maxUnhealthyInstancePercent": 20,
+            "maxUnhealthyUpgradedInstancePercent": 20,
+            "pauseTimeBetweenBatches": "PT0S"
+          },
+          "automaticOSUpgradePolicy": {
+            "enableAutomaticOSUpgrade": true,
+            "disableAutomaticRollback": false
+          }
+        },
+        "scaleInPolicy": {
+          "rules": [
+            "Default"
+          ]
+        },
+        "virtualMachineProfile": {
+          "osProfile": {
+            "computerNamePrefix": "dnsfwd-",
+            "customdata": "[base64(parameters('customData'))]",
+            "adminUsername": "[parameters('sshUser')]",
+            "linuxConfiguration": {
+              "disablePasswordAuthentication": true,
+              "ssh": {
+                "publicKeys": [
+                  {
+                    "path": "[concat('/home/',parameters('sshUser'),'/.ssh/authorized_keys')]",
+                    "keyData": "[parameters('sshKey')]"
+                  }
+                ]
+              },
+              "provisionVMAgent": true
+            },
+            "secrets": []
+          },
+          "storageProfile": {
+            "osDisk": {
+              "createOption": "FromImage",
+              "caching": "ReadWrite",
+              "managedDisk": {
+                "storageAccountType": "Premium_LRS"
+              },
+              "diskSizeGB": 30
+            },
+            "imageReference": {
+              "publisher": "Canonical",
+              "offer": "UbuntuServer",
+              "sku": "18.04-LTS",
+              "version": "latest"
+            }
+          },
+          "networkProfile": {
+            "networkInterfaceConfigurations": [
+              {
+                "name": "[concat(parameters('vmssName'), '-nic')]",
+                "properties": {
+                  "primary": true,
+                  "enableAcceleratedNetworking": false,
+                  "dnsSettings": {
+                    "dnsServers": []
+                  },
+                  "enableIPForwarding": false,
+                  "ipConfigurations": [
+                    {
+                      "name": "[concat(parameters('vmssName'), '-nic-defaultIpConfiguration')]",
+                      "properties": {
+                        "primary": true,
+                        "subnet": {
+                          "id": "[concat(parameters('vnetId'), '/subnets/', parameters('subNetName'))]"
+                        },
+                        "privateIPAddressVersion": "IPv4",
+                        "loadBalancerBackendAddressPools": []
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "diagnosticsProfile": {
+            "bootDiagnostics": {
+              "enabled": true,
+              "storageUri": "[concat('https://', parameters('stgAcctName'), '.blob.core.windows.net/')]"
+            }
+          },
+          "extensionProfile": {
+            "extensions": [
+              {
+                "name": "HealthExtension",
+                "properties": {
+                  "autoUpgradeMinorVersion": false,
+                  "publisher": "Microsoft.ManagedServices",
+                  "type": "ApplicationHealthLinux",
+                  "typeHandlerVersion": "1.0",
+                  "settings": {
+                    "protocol": "tcp",
+                    "port": 53
+                  }
+                }
+              }
+            ]
+          },
+          "priority": "Regular"
+        },
+        "overprovision": true,
+        "doNotRunExtensionsOnOverprovisionedVMs": false,
+        "zoneBalance": false,
+        "platformFaultDomainCount": 1,
+        "automaticRepairsPolicy": {
+          "enabled": false,
+          "gracePeriod": "PT30M"
+        }
+      }
+    }
+  ]
+}

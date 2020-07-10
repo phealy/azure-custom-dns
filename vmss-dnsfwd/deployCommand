@@ -1,0 +1,5 @@
+az deployment group create \
+  --resource-group rg-hub-dnsfwd-centralus \
+  --template-file template-vmss.json \
+  --parameters @parameters.json \
+  --parameters customData=@customData.yaml

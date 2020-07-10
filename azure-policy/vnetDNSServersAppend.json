@@ -1,0 +1,56 @@
+{
+  "properties": {
+    "displayName": "Custom DNS management - set Virtual Network DNS servers",
+    "policyType": "Custom",
+    "mode": "All",
+    "description": "Custom DNS servers must be set to the AD DC IPs.",
+    "parameters": {
+      "customDNSServers": {
+        "type": "Array",
+        "metadata": {
+          "displayName": "Custom DNS servers",
+          "description": "The list of required custom DNS servers."
+        }
+      }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          {
+            "field": "type",
+            "equals": "Microsoft.Network/virtualNetworks"
+          },
+          {
+            "anyOf": [
+              {
+                "count": {
+                  "field": "Microsoft.Network/virtualNetworks/dhcpOptions.dnsServers[*]"
+                },
+                "notEquals": "[length(parameters('customDNSServers'))]"
+              },
+              {
+                "count": {
+                  "field": "Microsoft.Network/virtualNetworks/dhcpOptions.dnsServers[*]",
+                  "where": {
+                    "field": "Microsoft.Network/virtualNetworks/dhcpOptions.dnsServers[*]",
+                    "in": "[parameters('customDNSServers')]"
+                  }
+                },
+                "notEquals": "[length(field('Microsoft.Network/virtualNetworks/dhcpOptions.dnsServers[*]'))]"
+              }
+            ]
+          }
+        ]
+      },
+      "then": {
+        "effect": "append",
+        "details": [
+          {
+            "field": "Microsoft.Network/virtualNetworks/dhcpOptions.dnsServers",
+            "value": "[parameters('customDNSServers')]"
+          }
+        ]
+      }
+    }
+  }
+}
