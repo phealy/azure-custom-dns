@@ -10,8 +10,6 @@ This repository will help set up Azure DNS to function in a hub and spoke model 
 This ARM template deploys a virtual machine scale set consisting of 3 Ubuntu 18.04 VMs with dnsmasq installed and configured. It is deployed in a stateless configuration, so the VMs can automatically patch and self-heal in the event of a failed instance.
 
 ### Deployment instructions
-- Deploy via the portal<br>
-  <a href="https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fphealy%2Fazure-custom-dns%2Fmaster%2Fvmss-dnsfwd%2Ftemplate-vmss.json"><img src="https://aka.ms/deploytoazurebutton"/></a>
 - Deploy via the command line
   1. Modify parameters.json as appropriate for your environment
       - `vmssName`: name of the scaleset
@@ -54,6 +52,9 @@ This ARM template deploys a virtual machine scale set consisting of 3 Ubuntu 18.
           -TemplateParameterFile .\parameters.json `
           -customData $(Get-Content .\customData.yaml -Raw)</code></pre>
         </details>
+  - Deploy via the portal
+    - [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fphealy%2Fazure-custom-dns%2Fmaster%2Fvmss-dnsfwd%2Ftemplate-vmss.json)
+    - You will need to convert the customData.yaml to a single line, joined by '\n'
 
 ## Azure Policy for Custom DNS
 
