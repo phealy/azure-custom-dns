@@ -52,9 +52,6 @@ This ARM template deploys a virtual machine scale set consisting of 3 Ubuntu 18.
           -TemplateParameterFile .\parameters.json `
           -customData $(Get-Content .\customData.yaml -Raw)</code></pre>
         </details>
-  - Deploy via the portal
-    - [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fphealy%2Fazure-custom-dns%2Fmaster%2Fvmss-dnsfwd%2Ftemplate-vmss.json)
-    - You will need to convert the customData.yaml to a single line, joined by '\n'
 
 ## Azure Policy for Custom DNS
 
