@@ -50,7 +50,7 @@
       "type": "string"
     },
     "sshKey": {
-      "metadata": { "description": "SSH public key for admin access" },
+      "metadata": { "description": "SSH public key for admin access (username is azureuser by default)" },
       "type": "String"
     },
     "optionLine1": {
@@ -96,6 +96,21 @@
   },
   "variables": {
     "subnetId": "[concat(resourceId(parameters('vnetRGName'), 'Microsoft.Network/virtualNetworks', parameters('vnetName')), '/subnets/', parameters('subNetName'))]",
+    "bootDiagnosticsDisabled": {
+      "enabled": false
+    },
+    "bootDiagnosticsEnabled": {
+      "enabled": true,
+      "storageUri": "[concat('https://',parameters('stgAcctName'),'.blob.core.windows.net/')]"
+    },
+    "loadBalancerBackendAddressPoolsWithExternal": [
+      { "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('internalLoadBalancerName')), '/backendAddressPools/dnsfwd')]" },
+      { "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('externalLoadBalancerName')), '/backendAddressPools/dnsfwd')]" }
+    ],
+    "loadBalancerBackendAddressPoolsWithoutInternal": [
+      { "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('internalLoadBalancerName')), '/backendAddressPools/dnsfwd')]" }
+    ],
+    "loadBalancerBackendAddressPools": "[if(parameters('deployExternalLoadBalancer'), variables('loadBalancerBackendAddressPoolsWithExternal'), variables('loadBalancerBackendAddressPoolsWithoutInternal'))]",
     "customDataTemplateBegin": "#cloud-config\npackage_update: true\npackages:\n- dnsmasq\nwrite_files:\n- path: /etc/dnsmasq.conf\n  content: |\n    no-resolv\n",
     "customDataTemplateEnd": "    server=168.63.129.16\nruncmd:\n- [ systemctl, daemon-reload ]\n- [ systemctl, enable, dnsmasq.service ]\n- [ systemctl, start, --no-block, dnsmasq.service ]\n",
     "customDataOptionLine1": "[if(not(empty(parameters('optionLine1'))), concat('    ', trim(parameters('optionLine1')), '\n'), '')]",
@@ -267,7 +282,7 @@
       "apiVersion": "2019-07-01",
       "dependsOn": [
         "[parameters('internalLoadBalancerName')]",
-        "[if(parameters('deployExternalLoadBalancer'),parameters('externalLoadBalancerName'),'')]"
+        "[parameters('externalLoadBalancerName')]"
       ],
       "name": "[parameters('vmssName')]",
       "location": "[resourceGroup().location]",
@@ -356,14 +371,7 @@
                           "id": "[variables('subnetId')]"
                         },
                         "privateIPAddressVersion": "IPv4",
-                        "loadBalancerBackendAddressPools": [
-                          {
-                            "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('internalLoadBalancerName')), '/backendAddressPools/dnsfwd')]"
-                          },
-                          {
-                            "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('externalLoadBalancerName')), '/backendAddressPools/dnsfwd')]"
-                          }
-                        ]
+                        "loadBalancerBackendAddressPools": "[variables('loadBalancerBackendAddressPools')]"
                       }
                     }
                   ]
@@ -372,10 +380,7 @@
             ]
           },
           "diagnosticsProfile": {
-            "bootDiagnostics": {
-              "enabled": true,
-              "storageUri": "[concat('https://', parameters('stgAcctName'), '.blob.core.windows.net/')]"
-            }
+            "bootDiagnostics": "[if(empty(parameters('stgAcctName')), variables('bootDiagnosticsDisabled'), variables('bootDiagnosticsEnabled'))]"
           },
           "extensionProfile": {
             "extensions": [

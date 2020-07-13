@@ -18,15 +18,15 @@ This ARM template deploys a virtual machine scale set consisting of 3 Ubuntu 18.
         - `vnetName`: the name of the virtual network to deploy into
         - `vnetRGName`: the name of the resource group `vnetName` is in, if not the same as the template deployment.
         - `subnetName`: the name of the subnet in `vnetName` to use
-        - `stgAcctName`: the name of the storage account to use for boot diagnostics
-        - `sshUser`: the username to use for admin access via SSH
-        - `sshKey`: the public key to assign to `sshUser`
+        - `sshKey`: the public key to assign to `sshUser` (`sshUser` is set to `azureuser` by default)
       - Optional
         - `deployExternalLoadBalancer`: Needed to allow external connectivity per [scenario 2](https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-outbound-connections) **unless** your network has egress enabled via a UDR to an Azure Firewall, Azure NAT Gateway, or NVA.
         - `externalLoadBalancerName`: Name of the external load balancer to deploy if `deployExternalLoadBalancer` is true. Defaults to `lbe-dnsfwd-<region>-001`
         - `externalLoadBalancerPublicIPName`: Name of the public IP for the external load balancer if `deployExternalLoadBalancer` is true. Defaults to `lbe-dnsfwd-<region>-001-pip`
         - `internalLoadBalancerName`: Name of the internal load balancer to deploy in front of the VM scale set. Defaults to `lbi-dnsfwd-<region>-001`
         - `vmssName`: name of the Virtual Machine scale set. Defaults to `vmss-dnsfwd-<region>-001`
+        - `stgAcctName`: the name of the storage account to use for boot diagnostics. If not supplied, boot diagnostics will not be enabled.
+        - `sshUser`: the username to use for admin access via SSH. Defaults to `azureuser`
         - `optionLine#`, where # is 1-8: additional option lines to add to /etc/dnsmasq.conf. These can be used to direct traffic for your internal domains to other name servers as appropriate. For example, you can send traffic for your internal domains `mydomain.com` and `mydomain2.com` to 10.0.10.10 by including the line `server=/mydomain.com/mydomain2.com/10.0.10.10`. See the [DNSMASQ man page](http://www.thekelleys.org.uk/dnsmasq/docs/dnsmasq-man.html) for more details.
   1. Deploy the template
       - <details>
