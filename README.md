@@ -29,24 +29,16 @@ This ARM template deploys a virtual machine scale set consisting of 3 Ubuntu 18.
         - `sshUser`: the username to use for admin access via SSH. Defaults to `azureuser`
         - `optionLine#`, where # is 1-8: additional option lines to add to /etc/dnsmasq.conf. These can be used to direct traffic for your internal domains to other name servers as appropriate. For example, you can send traffic for your internal domains `mydomain.com` and `mydomain2.com` to 10.0.10.10 by including the line `server=/mydomain.com/mydomain2.com/10.0.10.10`. See the [DNSMASQ man page](http://www.thekelleys.org.uk/dnsmasq/docs/dnsmasq-man.html) for more details.
   1. Deploy the template
-      - <details>
-        <summary>
-        Using Azure CLI
-        </summary>
+      - Using Azure CLI
         <pre><code>az deployment group create \
           --resource-group rg-hub-dnsfwd-centralus \
           --template-file template-vmss.json \
           --parameters @parameters.json</code></pre>
-        </details>
-      - <details>
-        <summary>
-        Using Azure PowerShell
-        </summary>
+      - Using Azure PowerShell
         <pre><code>New-AzResourceGroupDeployment `
           -ResourceGroupName rg-hub-dnsfwd-centralus `
           -TemplateFile .\template-vmss.json `
           -TemplateParameterFile .\parameters.json</code></pre>
-        </details>
 
 ## Azure Policy for Custom DNS
 
