@@ -7,31 +7,28 @@ This repository will help set up Azure DNS to function in a hub and spoke model 
 - [On-premises DNS Setup](#on-premises-dns-setup)
 
 ## DNS Forwarding VMSS
-This ARM template deploys a virtual machine scale set consisting of 3 Ubuntu 18.04 VMs with dnsmasq installed and configured. It is deployed in a stateless configuration, so the VMs can automatically patch and self-heal in the event of a failed instance.
+This ARM template deploys a virtual machine scale set consisting of 3 Ubuntu 18.04 VMs with dnsmasq installed and configured. It is deployed in a stateless configuration, so the VMs can automatically patch and self-heal in the event of a failed instance. The VMs will answer DNS queries from any host that can reach them via internal traffic (but not the internet). Queries will be forwarded to the Azure DNS servers, but domains can be configured to be delegated to on-premises servers if desired.
 
 ### Deployment instructions
+- Deploy via the portal<br>
+  [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fphealy%2Fazure-custom-dns%2Fmaster%2Fvmss-dnsfwd%2Ftemplate-vmss.json)
 - Deploy via the command line
   1. Modify parameters.json as appropriate for your environment
-      - `vmssName`: name of the scaleset
-      - <details>
-        <summary>
-        <code>vnetId</code>: the full resource ID of the virtual network to use
-        </summary>
-        <ul>
-        <li>via <a href="https://portal.azure.com/">Azure Portal</a>: found in the properties blade of the virtual network</li>
-        <li>via <a href="https://docs.microsoft.com/en-us/cli/azure/">Azure CLI</a>: <code>az network vnet show --resource-group rg-hub-network-centralus --name vnet-hub-centralus-001 --query id -o tsv</code></li>
-        <li>via <a href="https://docs.microsoft.com/en-us/powershell/azure/">Azure PowerShell</a>: <code>Get-AzVirtualNetwork -ResourceGroupName rg-hub-network-centralus -Name vnet-hub-centralus-001 | Select-Object -ExpandProperty Id</code></li>
-        </ul>
-        </details>
-      - `subnetName`: the name of the subnet
-      - `stgAcctName`: the name of the storage account to use for boot diagnostics
-      - `sshUser`: the username to use for admin access via SSH
-      - `sshKey`: the public key to assign to `sshUser`
-  2. Modify customData.json to appropriately set up dnsmasq
-      - add `server=/domain/nameserverIP` lines for each domain you want to forward to on-premises (if you have multiple nameservers, use one line per nameserver)
-      - if you have multiple domains to forward to the same nameserver, you can use the format `server=/domain1/domain2/nameserverIP`
-      - leave the last server line intact to forward any non-matching queries to Azure DNS: `server=168.63.129.16`
-  3. Deploy the template
+      - Required
+        - `vnetName`: the name of the virtual network to deploy into
+        - `vnetRGName`: the name of the resource group `vnetName` is in, if not the same as the template deployment.
+        - `subnetName`: the name of the subnet in `vnetName` to use
+        - `stgAcctName`: the name of the storage account to use for boot diagnostics
+        - `sshUser`: the username to use for admin access via SSH
+        - `sshKey`: the public key to assign to `sshUser`
+      - Optional
+        - `deployExternalLoadBalancer`: Needed to allow external connectivity per [scenario 2](https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-outbound-connections) **unless** your network has egress enabled via a UDR to an Azure Firewall, Azure NAT Gateway, or NVA.
+        - `externalLoadBalancerName`: Name of the external load balancer to deploy if `deployExternalLoadBalancer` is true. Defaults to `lbe-dnsfwd-<region>-001`
+        - `externalLoadBalancerPublicIPName`: Name of the public IP for the external load balancer if `deployExternalLoadBalancer` is true. Defaults to `lbe-dnsfwd-<region>-001-pip`
+        - `internalLoadBalancerName`: Name of the internal load balancer to deploy in front of the VM scale set. Defaults to `lbi-dnsfwd-<region>-001`
+        - `vmssName`: name of the Virtual Machine scale set. Defaults to `vmss-dnsfwd-<region>-001`
+        - `optionLine#`, where # is 1-8: additional option lines to add to /etc/dnsmasq.conf. These can be used to direct traffic for your internal domains to other name servers as appropriate. For example, you can send traffic for your internal domains `mydomain.com` and `mydomain2.com` to 10.0.10.10 by including the line `server=/mydomain.com/mydomain2.com/10.0.10.10`. See the [DNSMASQ man page](http://www.thekelleys.org.uk/dnsmasq/docs/dnsmasq-man.html) for more details.
+  1. Deploy the template
       - <details>
         <summary>
         Using Azure CLI
@@ -39,8 +36,7 @@ This ARM template deploys a virtual machine scale set consisting of 3 Ubuntu 18.
         <pre><code>az deployment group create \
           --resource-group rg-hub-dnsfwd-centralus \
           --template-file template-vmss.json \
-          --parameters @parameters.json \
-          --parameters customData=@customData.yaml</code></pre>
+          --parameters @parameters.json</code></pre>
         </details>
       - <details>
         <summary>
@@ -49,12 +45,8 @@ This ARM template deploys a virtual machine scale set consisting of 3 Ubuntu 18.
         <pre><code>New-AzResourceGroupDeployment `
           -ResourceGroupName rg-hub-dnsfwd-centralus `
           -TemplateFile .\template-vmss.json `
-          -TemplateParameterFile .\parameters.json `
-          -customData $(Get-Content .\customData.yaml -Raw)</code></pre>
+          -TemplateParameterFile .\parameters.json</code></pre>
         </details>
-  - Deploy via the portal
-    - [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fphealy%2Fazure-custom-dns%2Fmaster%2Fvmss-dnsfwd%2Ftemplate-vmss.json)
-    - You will need to convert the customData.yaml to a single line, joined by '\n'
 
 ## Azure Policy for Custom DNS
 

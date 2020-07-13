@@ -2,16 +2,42 @@
   "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
+    "deployExternalLoadBalancer": {
+      "defaultValue": true,
+      "metadata": { "description": "Whether an external load balancer will be deployed to provide egress for the VMs so they can reach their repositories to build. Not needed if you have NAT or NVAs providing egress from private IPs. See https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-outbound-connections#scenarios" },
+      "type": "Bool"
+    },
+    "externalLoadBalancerName": {
+      "defaultValue": "[concat('lbe-dnsfwd-', toLower(resourceGroup().location), '-001')]",
+      "metadata": { "description": "Name of the internal load balancer" },
+      "type": "String"
+    },
+    "externalLoadBalancerPublicIPName": {
+      "defaultValue": "[concat('lbe-dnsfwd-', toLower(resourceGroup().location), '-001-pip')]",
+      "metadata": { "description": "Name of the internal load balancer" },
+      "type": "String"
+    },
+    "internalLoadBalancerName": {
+      "defaultValue": "[concat('lbi-dnsfwd-', toLower(resourceGroup().location), '-001')]",
+      "metadata": { "description": "Name of the internal load balancer" },
+      "type": "String"
+    },
     "vmssName": {
+      "defaultValue": "[concat('vmss-dnsfwd-', toLower(resourceGroup().location), '-001')]",
       "metadata": { "description": "Name of the virtual machine scale set" },
       "type": "String"
     },
-    "vnetId": {
-      "metadata": { "description": "Resource ID of the virtual network to deploy into" },
+    "vnetName": {
+      "metadata": { "description": "Name of the virtual network to deploy into" },
+      "type": "String"
+    },
+    "vnetRGName": {
+      "defaultValue": "[resourceGroup().name]",
+      "metadata": { "description": "Name of the resource group the virtual network is in" },
       "type": "String"
     },
     "subnetName": {
-      "metadata": { "description": "Name of the subnet to use" },
+      "metadata": { "description": "Name of the subnet to use in the selected virtual network" },
       "type": "String"
     },
     "stgAcctName": {
@@ -27,16 +53,222 @@
       "metadata": { "description": "SSH public key for admin access" },
       "type": "String"
     },
-    "customData": {
-      "metadata": { "description": "The custom-data.yaml file to use at build time" },
-      "type": "String"
+    "optionLine1": {
+      "defaultValue": "",
+      "metadata": { "description": "A line to add to dnsmasq.conf - to direct queries for mydomain to 1.2.3.4, use 'server=/mydomain/1.2.3.4'" },
+      "type": "string"
+    },
+    "optionLine2": {
+      "defaultValue": "",
+      "metadata": { "description": "A line to add to dnsmasq.conf - to direct queries for mydomain to 1.2.3.4, use 'server=/mydomain/1.2.3.4'" },
+      "type": "string"
+    },
+    "optionLine3": {
+      "defaultValue": "",
+      "metadata": { "description": "A line to add to dnsmasq.conf - to direct queries for mydomain to 1.2.3.4, use 'server=/mydomain/1.2.3.4'" },
+      "type": "string"
+    },
+    "optionLine4": {
+      "defaultValue": "",
+      "metadata": { "description": "A line to add to dnsmasq.conf - to direct queries for mydomain to 1.2.3.4, use 'server=/mydomain/1.2.3.4'" },
+      "type": "string"
+    },
+    "optionLine5": {
+      "defaultValue": "",
+      "metadata": { "description": "A line to add to dnsmasq.conf - to direct queries for mydomain to 1.2.3.4, use 'server=/mydomain/1.2.3.4'" },
+      "type": "string"
+    },
+    "optionLine6": {
+      "defaultValue": "",
+      "metadata": { "description": "A line to add to dnsmasq.conf - to direct queries for mydomain to 1.2.3.4, use 'server=/mydomain/1.2.3.4'" },
+      "type": "string"
+    },
+    "optionLine7": {
+      "defaultValue": "",
+      "metadata": { "description": "A line to add to dnsmasq.conf - to direct queries for mydomain to 1.2.3.4, use 'server=/mydomain/1.2.3.4'" },
+      "type": "string"
+    },
+    "optionLine8": {
+      "defaultValue": "",
+      "metadata": { "description": "A line to add to dnsmasq.conf - to direct queries for mydomain to 1.2.3.4, use 'server=/mydomain/1.2.3.4'" },
+      "type": "string"
     }
   },
-  "variables": {},
+  "variables": {
+    "subnetId": "[concat(resourceId(parameters('vnetRGName'), 'Microsoft.Network/virtualNetworks', parameters('vnetName')), '/subnets/', parameters('subNetName'))]",
+    "customDataTemplateBegin": "#cloud-config\npackage_update: true\npackages:\n- dnsmasq\nwrite_files:\n- path: /etc/dnsmasq.conf\n  content: |\n    no-resolv\n",
+    "customDataTemplateEnd": "    server=168.63.129.16\nruncmd:\n- [ systemctl, daemon-reload ]\n- [ systemctl, enable, dnsmasq.service ]\n- [ systemctl, start, --no-block, dnsmasq.service ]\n",
+    "customDataOptionLine1": "[if(not(empty(parameters('optionLine1'))), concat('    ', trim(parameters('optionLine1')), '\n'), '')]",
+    "customDataOptionLine2": "[if(not(empty(parameters('optionLine2'))), concat('    ', trim(parameters('optionLine2')), '\n'), '')]",
+    "customDataOptionLine3": "[if(not(empty(parameters('optionLine3'))), concat('    ', trim(parameters('optionLine3')), '\n'), '')]",
+    "customDataOptionLine4": "[if(not(empty(parameters('optionLine4'))), concat('    ', trim(parameters('optionLine4')), '\n'), '')]",
+    "customDataOptionLine5": "[if(not(empty(parameters('optionLine5'))), concat('    ', trim(parameters('optionLine5')), '\n'), '')]",
+    "customDataOptionLine6": "[if(not(empty(parameters('optionLine6'))), concat('    ', trim(parameters('optionLine6')), '\n'), '')]",
+    "customDataOptionLine7": "[if(not(empty(parameters('optionLine7'))), concat('    ', trim(parameters('optionLine7')), '\n'), '')]",
+    "customDataOptionLine8": "[if(not(empty(parameters('optionLine8'))), concat('    ', trim(parameters('optionLine8')), '\n'), '')]",
+    "customDataOptionLines": "[concat(variables('customDataOptionLine1'),variables('customDataOptionLine2'),variables('customDataOptionLine3'),variables('customDataOptionLine4'),variables('customDataOptionLine5'),variables('customDataOptionLine6'),variables('customDataOptionLine7'),variables('customDataOptionLine8'))]",
+    "customData": "[concat(string(variables('customDataTemplateBegin')),string(variables('customDataOptionLines')), string(variables('customDataTemplateEnd')))]"
+  },
   "resources": [
+    {
+      "apiVersion": "2019-06-01",
+      "name": "[parameters('internalLoadBalancerName')]",
+      "type": "Microsoft.Network/loadBalancers",
+      "location": "[resourceGroup().location]",
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "frontendIPConfigurations": [
+          {
+            "name": "LoadBalancerFrontEnd",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('subnetId')]"
+              }
+            }
+          }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "dnsfwd",
+            "properties": {
+              "loadBalancerBackendAddresses": []
+            }
+          }
+        ],
+        "loadBalancingRules": [
+          {
+            "name": "dns-udp-53",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('internalLoadBalancerName')), '/frontendIPConfigurations/LoadBalancerFrontEnd')]"
+              },
+              "frontendPort": 53,
+              "backendPort": 53,
+              "enableFloatingIP": false,
+              "idleTimeoutInMinutes": 4,
+              "protocol": "Udp",
+              "enableTcpReset": false,
+              "loadDistribution": "Default",
+              "disableOutboundSnat": false,
+              "backendAddressPool": {
+                "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('internalLoadBalancerName'), 'dnsfwd')]"
+              },
+              "probe": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('internalLoadBalancerName')), '/probes/dns-tcp-53')]"
+              }
+            }
+          },
+          {
+            "name": "dns-tcp-53",
+            "properties": {
+              "frontendIPConfiguration": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('internalLoadBalancerName')), '/frontendIPConfigurations/LoadBalancerFrontEnd')]"
+              },
+              "frontendPort": 53,
+              "backendPort": 53,
+              "enableFloatingIP": false,
+              "idleTimeoutInMinutes": 4,
+              "protocol": "Tcp",
+              "enableTcpReset": false,
+              "loadDistribution": "Default",
+              "disableOutboundSnat": false,
+              "backendAddressPool": {
+                "id": "[resourceId('Microsoft.Network/loadBalancers/backendAddressPools', parameters('internalLoadBalancerName'), 'dnsfwd')]"
+              },
+              "probe": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('internalLoadBalancerName')), '/probes/dns-tcp-53')]"
+              }
+            }
+          }
+        ],
+        "probes": [
+          {
+            "name": "dns-tcp-53",
+            "properties": {
+              "protocol": "Tcp",
+              "port": 53,
+              "intervalInSeconds": 5,
+              "numberOfProbes": 2
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/loadBalancers/backendAddressPools",
+      "apiVersion": "2020-04-01",
+      "name": "[concat(parameters('internalLoadBalancerName'), '/dnsfwd')]",
+      "dependsOn": [
+        "[parameters('internalLoadBalancerName')]"
+      ],
+      "properties": {
+        "loadBalancerBackendAddresses": []
+      }
+    },
+    {
+      "condition": "[parameters('deployExternalLoadBalancer')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2019-02-01",
+      "name": "[parameters('externalLoadBalancerPublicIPName')]",
+      "location": "[resourceGroup().location]",
+      "tags": {},
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Static",
+        "publicIPAddressVersion": "IPv4",
+        "ipTags": []
+      }
+    },
+    {
+      "condition": "[parameters('deployExternalLoadBalancer')]",
+      "type": "Microsoft.Network/loadBalancers",
+      "apiVersion": "2019-06-01",
+      "name": "[parameters('externalLoadBalancerName')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[parameters('externalLoadBalancerPublicIPName')]"
+      ],
+      "tags": {},
+      "sku": {
+        "name": "Standard"
+      },
+      "properties": {
+        "frontendIPConfigurations": [
+          {
+            "name": "LoadBalancerFrontEnd",
+            "properties": {
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('externalLoadBalancerPublicIPName'))]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "condition": "[parameters('deployExternalLoadBalancer')]",
+      "type": "Microsoft.Network/loadBalancers/backendAddressPools",
+      "apiVersion": "2020-04-01",
+      "name": "[concat(parameters('externalLoadBalancerName'), '/dnsfwd')]",
+      "dependsOn": [
+        "[parameters('externalLoadBalancerName')]"
+      ],
+      "properties": {
+        "loadBalancerBackendAddresses": []
+      }
+    },
     {
       "type": "Microsoft.Compute/virtualMachineScaleSets",
       "apiVersion": "2019-07-01",
+      "dependsOn": [
+        "[parameters('internalLoadBalancerName')]",
+        "[if(parameters('deployExternalLoadBalancer'),parameters('externalLoadBalancerName'),'')]"
+      ],
       "name": "[parameters('vmssName')]",
       "location": "[resourceGroup().location]",
       "sku": {
@@ -72,7 +304,7 @@
         "virtualMachineProfile": {
           "osProfile": {
             "computerNamePrefix": "dnsfwd-",
-            "customdata": "[base64(parameters('customData'))]",
+            "customdata": "[base64(variables('customData'))]",
             "adminUsername": "[parameters('sshUser')]",
             "linuxConfiguration": {
               "disablePasswordAuthentication": true,
@@ -121,10 +353,17 @@
                       "properties": {
                         "primary": true,
                         "subnet": {
-                          "id": "[concat(parameters('vnetId'), '/subnets/', parameters('subNetName'))]"
+                          "id": "[variables('subnetId')]"
                         },
                         "privateIPAddressVersion": "IPv4",
-                        "loadBalancerBackendAddressPools": []
+                        "loadBalancerBackendAddressPools": [
+                          {
+                            "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('internalLoadBalancerName')), '/backendAddressPools/dnsfwd')]"
+                          },
+                          {
+                            "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('externalLoadBalancerName')), '/backendAddressPools/dnsfwd')]"
+                          }
+                        ]
                       }
                     }
                   ]

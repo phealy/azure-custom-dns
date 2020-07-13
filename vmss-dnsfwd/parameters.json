@@ -3,21 +3,48 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "vmssName": {
-      "value": "vmss-dnsfwd-centralus-001"
+      "value": ""
     },
-    "vnetId": {
-      "value": "/subscriptions/69924db1-a0fe-43f6-b1ad-86bb3248f4a1/resourceGroups/rg-hub-network-centralus/providers/Microsoft.Network/virtualNetworks/vnet-hub-centralus-001"
+    "vnetName": {
+      "value": ""
+    },
+    "vnetRGName": {
+      "value": ""
     },
     "subnetName": {
-      "value": "snet-dnsfwd-centralus-001"
+      "value": ""
     },
     "stgAcctName": {
-      "value": "pahealyhublogs"
+      "value": ""
     },
     "sshUser": {
-      "value": "azureuser"
+      "value": ""
     },
     "sshKey": {
+      "value": ""
+    },
+    "optionLine1": {
+      "value": ""
+    },
+    "optionLine2": {
+      "value": ""
+    },
+    "optionLine3": {
+      "value": ""
+    },
+    "optionLine4": {
+      "value": ""
+    },
+    "optionLine5": {
+      "value": ""
+    },
+    "optionLine6": {
+      "value": ""
+    },
+    "optionLine7": {
+      "value": ""
+    },
+    "optionLine8": {
       "value": ""
     }
   }
