@@ -42,7 +42,7 @@
     },
     "stgAcctName": {
       "defaultValue": "null",
-      "metadata": { "description": "Name of the storage account to use for boot diagnostics" },
+      "metadata": { "description": "Name of the storage account to use for boot diagnostics. Leave set to 'null' to disable boot diagnostics." },
       "type": "String"
     },
     "sshUser": {
