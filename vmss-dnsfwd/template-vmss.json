@@ -45,12 +45,17 @@
       "metadata": { "description": "Name of the storage account to use for boot diagnostics. Leave set to 'null' to disable boot diagnostics." },
       "type": "String"
     },
-    "sshUser": {
+    "adminUser": {
       "defaultValue": "azureuser",
       "metadata": { "description": "SSH admin username" },
       "type": "string"
     },
-    "sshKey": {
+    "adminPassword": {
+      "defaultValue": "",
+      "metadata": { "description": "Admin access password" },
+      "type": "securestring"
+    },
+    "adminSSHKey": {
       "metadata": { "description": "SSH public key for admin access (username is azureuser by default)" },
       "type": "String"
     },
@@ -322,14 +327,15 @@
           "osProfile": {
             "computerNamePrefix": "dnsfwd-",
             "customdata": "[base64(variables('customData'))]",
-            "adminUsername": "[parameters('sshUser')]",
+            "adminUsername": "[parameters('adminUser')]",
+            "adminPassword": "[parameters('adminPassword')]",
             "linuxConfiguration": {
-              "disablePasswordAuthentication": true,
+              "disablePasswordAuthentication": false,
               "ssh": {
                 "publicKeys": [
                   {
-                    "path": "[concat('/home/',parameters('sshUser'),'/.ssh/authorized_keys')]",
-                    "keyData": "[parameters('sshKey')]"
+                    "path": "[concat('/home/',parameters('adminUser'),'/.ssh/authorized_keys')]",
+                    "keyData": "[parameters('adminSSHKey')]"
                   }
                 ]
               },
