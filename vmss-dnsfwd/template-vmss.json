@@ -103,6 +103,7 @@
       "enabled": true,
       "storageUri": "[concat('https://',parameters('stgAcctName'),'.blob.core.windows.net/')]"
     },
+    "bootDiagnostics": "[if(or(empty(parameters('stgAcctName')),equals(parameters('stgAcctName'),'null')), variables('bootDiagnosticsDisabled'), variables('bootDiagnosticsEnabled'))]",
     "loadBalancerBackendAddressPoolsWithExternal": [
       { "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('internalLoadBalancerName')), '/backendAddressPools/dnsfwd')]" },
       { "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('externalLoadBalancerName')), '/backendAddressPools/dnsfwd')]" }
@@ -380,7 +381,7 @@
             ]
           },
           "diagnosticsProfile": {
-            "bootDiagnostics": "[if(empty(parameters('stgAcctName')), variables('bootDiagnosticsDisabled'), variables('bootDiagnosticsEnabled'))]"
+            "bootDiagnostics": "[variables('bootDiagnostics')]"
           },
           "extensionProfile": {
             "extensions": [
