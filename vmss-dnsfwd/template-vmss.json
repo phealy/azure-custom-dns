@@ -9,12 +9,12 @@
     },
     "externalLoadBalancerName": {
       "defaultValue": "[concat('lbe-dnsfwd-', toLower(resourceGroup().location), '-001')]",
-      "metadata": { "description": "Name of the internal load balancer" },
+      "metadata": { "description": "Name of the external load balancer" },
       "type": "String"
     },
     "externalLoadBalancerPublicIPName": {
       "defaultValue": "[concat('lbe-dnsfwd-', toLower(resourceGroup().location), '-001-pip')]",
-      "metadata": { "description": "Name of the internal load balancer" },
+      "metadata": { "description": "Name of the external load balancer public IP" },
       "type": "String"
     },
     "internalLoadBalancerName": {
