@@ -41,6 +41,7 @@
       "type": "String"
     },
     "stgAcctName": {
+      "defaultValue": "null",
       "metadata": { "description": "Name of the storage account to use for boot diagnostics" },
       "type": "String"
     },
