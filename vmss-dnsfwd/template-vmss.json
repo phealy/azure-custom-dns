@@ -41,8 +41,8 @@
       "type": "String"
     },
     "stgAcctName": {
-      "defaultValue": "null",
-      "metadata": { "description": "Name of the storage account to use for boot diagnostics. Leave set to 'null' to disable boot diagnostics." },
+      "defaultValue": "",
+      "metadata": { "description": "Name of the storage account to use for boot diagnostics. Boot diagnostics will not be enabled if this is not provided." },
       "type": "String"
     },
     "adminUser": {
@@ -55,7 +55,8 @@
       "type": "securestring"
     },
     "adminSSHKey": {
-      "metadata": { "description": "SSH public key for admin access (username is azureuser by default)" },
+      "defaultValue": "",
+      "metadata": { "description": "SSH public key for admin access (username is azureuser by default). If provided, will disable password authentication via SSH." },
       "type": "String"
     },
     "optionLine1": {
@@ -297,7 +298,7 @@
     },
     {
       "type": "Microsoft.Compute/virtualMachineScaleSets",
-      "apiVersion": "2019-07-01",
+      "apiVersion": "2019-12-01",
       "dependsOn": [
         "[parameters('internalLoadBalancerName')]",
         "[parameters('externalLoadBalancerName')]"
@@ -420,4 +421,5 @@
         "gracePeriod": "PT30M"
       }
     }
-} ] }
+  ]
+}
