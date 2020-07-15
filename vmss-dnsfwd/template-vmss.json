@@ -51,6 +51,7 @@
       "type": "string"
     },
     "adminPassword": {
+      "defaultValue": "",
       "metadata": { "description": "Admin access password for serial console and/or SSH (if no key is provided) - 6-72 characters, at least 3 of lower case, upper case, numbers, and specials." },
       "type": "securestring"
     },
@@ -372,7 +373,7 @@
                   "primary": true,
                   "enableAcceleratedNetworking": false,
                   "dnsSettings": {
-                    "dnsServers": []
+                    "dnsServers": ["168.63.129.16"]
                   },
                   "enableIPForwarding": false,
                   "ipConfigurations": [
