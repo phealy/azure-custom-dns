@@ -17,10 +17,13 @@
     "stgAcctName": {
       "value": ""
     },
-    "sshUser": {
+    "adminUser": {
       "value": ""
     },
-    "sshKey": {
+    "adminPassword": {
+      "value": ""
+    },
+    "adminSSHKey": {
       "value": ""
     },
     "optionLine1": {

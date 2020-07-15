@@ -119,9 +119,13 @@
             "keyData": "[parameters('adminSSHKey')]"
           }
         ]
-      }
+      },
+      "provisionVMAgent": true
     },
-    "linuxConfiguration": "[if(or(empty(parameters('adminSSHKey')),equals(parameters('adminSSHKey'),'null')),json('{}'),variables('linuxConfigurationSSHKey'))]",
+    "linuxConfigurationNoSSHKey": {
+      "provisionVMAgent": true
+    },
+    "linuxConfiguration": "[if(or(empty(parameters('adminSSHKey')),equals(parameters('adminSSHKey'),'null')),variables('linuxConfigurationNoSSHKey'),variables('linuxConfigurationSSHKey'))]",
     "loadBalancerBackendAddressPoolsWithExternal": [
       { "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('internalLoadBalancerName')), '/backendAddressPools/dnsfwd')]" },
       { "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('externalLoadBalancerName')), '/backendAddressPools/dnsfwd')]" }
@@ -342,75 +346,74 @@
             "adminUsername": "[parameters('adminUser')]",
             "adminPassword": "[parameters('adminPassword')]",
             "linuxConfiguration": "[variables('linuxConfiguration')]",
-            "provisionVMAgent": true
+            "secrets": []
           },
-          "secrets": []
-        },
-        "storageProfile": {
-          "osDisk": {
-            "createOption": "FromImage",
-            "caching": "ReadWrite",
-            "managedDisk": {
-              "storageAccountType": "Premium_LRS"
+          "storageProfile": {
+            "osDisk": {
+              "createOption": "FromImage",
+              "caching": "ReadWrite",
+              "managedDisk": {
+                "storageAccountType": "Premium_LRS"
+              },
+              "diskSizeGB": 30
             },
-            "diskSizeGB": 30
-          },
-          "imageReference": {
-            "publisher": "Canonical",
-            "offer": "UbuntuServer",
-            "sku": "18.04-LTS",
-            "version": "latest"
-          }
-        },
-        "networkProfile": {
-          "networkInterfaceConfigurations": [
-            {
-              "name": "[concat(parameters('vmssName'), '-nic')]",
-              "properties": {
-                "primary": true,
-                "enableAcceleratedNetworking": false,
-                "dnsSettings": {
-                  "dnsServers": []
-                },
-                "enableIPForwarding": false,
-                "ipConfigurations": [
-                  {
-                    "name": "[concat(parameters('vmssName'), '-nic-defaultIpConfiguration')]",
-                    "properties": {
-                      "primary": true,
-                      "subnet": {
-                        "id": "[variables('subnetId')]"
-                      },
-                      "privateIPAddressVersion": "IPv4",
-                      "loadBalancerBackendAddressPools": "[variables('loadBalancerBackendAddressPools')]"
-                    }
-                  }
-                ]
-              }
+            "imageReference": {
+              "publisher": "Canonical",
+              "offer": "UbuntuServer",
+              "sku": "18.04-LTS",
+              "version": "latest"
             }
-          ]
-        },
-        "diagnosticsProfile": {
-          "bootDiagnostics": "[variables('bootDiagnostics')]"
-        },
-        "extensionProfile": {
-          "extensions": [
-            {
-              "name": "HealthExtension",
-              "properties": {
-                "autoUpgradeMinorVersion": false,
-                "publisher": "Microsoft.ManagedServices",
-                "type": "ApplicationHealthLinux",
-                "typeHandlerVersion": "1.0",
-                "settings": {
-                  "protocol": "tcp",
-                  "port": 53
+          },
+          "networkProfile": {
+            "networkInterfaceConfigurations": [
+              {
+                "name": "[concat(parameters('vmssName'), '-nic')]",
+                "properties": {
+                  "primary": true,
+                  "enableAcceleratedNetworking": false,
+                  "dnsSettings": {
+                    "dnsServers": []
+                  },
+                  "enableIPForwarding": false,
+                  "ipConfigurations": [
+                    {
+                      "name": "[concat(parameters('vmssName'), '-nic-defaultIpConfiguration')]",
+                      "properties": {
+                        "primary": true,
+                        "subnet": {
+                          "id": "[variables('subnetId')]"
+                        },
+                        "privateIPAddressVersion": "IPv4",
+                        "loadBalancerBackendAddressPools": "[variables('loadBalancerBackendAddressPools')]"
+                      }
+                    }
+                  ]
                 }
               }
-            }
-          ]
+            ]
+          },
+          "diagnosticsProfile": {
+            "bootDiagnostics": "[variables('bootDiagnostics')]"
+          },
+          "extensionProfile": {
+            "extensions": [
+              {
+                "name": "HealthExtension",
+                "properties": {
+                  "autoUpgradeMinorVersion": false,
+                  "publisher": "Microsoft.ManagedServices",
+                  "type": "ApplicationHealthLinux",
+                  "typeHandlerVersion": "1.0",
+                  "settings": {
+                    "protocol": "tcp",
+                    "port": 53
+                  }
+                }
+              }
+            ]
+          },
+          "priority": "Regular"
         },
-        "priority": "Regular",
         "overprovision": true,
         "doNotRunExtensionsOnOverprovisionedVMs": false,
         "zoneBalance": false,
