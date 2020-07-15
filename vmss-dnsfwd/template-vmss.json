@@ -410,15 +410,15 @@
             }
           ]
         },
-        "priority": "Regular"
-      },
-      "overprovision": true,
-      "doNotRunExtensionsOnOverprovisionedVMs": false,
-      "zoneBalance": false,
-      "platformFaultDomainCount": 1,
-      "automaticRepairsPolicy": {
-        "enabled": false,
-        "gracePeriod": "PT30M"
+        "priority": "Regular",
+        "overprovision": true,
+        "doNotRunExtensionsOnOverprovisionedVMs": false,
+        "zoneBalance": false,
+        "platformFaultDomainCount": 1,
+        "automaticRepairsPolicy": {
+          "enabled": false,
+          "gracePeriod": "PT30M"
+        }
       }
     }
   ]
