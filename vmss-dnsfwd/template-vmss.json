@@ -237,17 +237,6 @@
       }
     },
     {
-      "type": "Microsoft.Network/loadBalancers/backendAddressPools",
-      "apiVersion": "2020-04-01",
-      "name": "[concat(parameters('internalLoadBalancerName'), '/dnsfwd')]",
-      "dependsOn": [
-        "[parameters('internalLoadBalancerName')]"
-      ],
-      "properties": {
-        "loadBalancerBackendAddresses": []
-      }
-    },
-    {
       "condition": "[parameters('deployExternalLoadBalancer')]",
       "type": "Microsoft.Network/publicIPAddresses",
       "apiVersion": "2019-02-01",
@@ -286,19 +275,34 @@
               }
             }
           }
+        ],
+        "backendAddressPools": [
+          {
+            "name": "dnsfwd",
+            "properties": {
+              "loadBalancerBackendAddresses": []
+            }
+          }
+        ],
+        "outboundRules": [
+          {
+            "name": "dnsfwd",
+            "properties": {
+              "allocatedOutboundPorts": 0,
+              "protocol": "All",
+              "enableTcpReset": true,
+              "idleTimeoutInMinutes": 4,
+              "backendAddressPool": {
+                "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('externalLoadBalancerName')), '/backendAddressPools/dnsfwd')]"
+              },
+              "frontendIPConfigurations": [
+                {
+                  "id": "[concat(resourceId('Microsoft.Network/loadBalancers', parameters('externalLoadBalancerName')), '/frontendIPConfigurations/LoadBalancerFrontEnd')]"
+                }
+              ]
+            }
+          }
         ]
-      }
-    },
-    {
-      "condition": "[parameters('deployExternalLoadBalancer')]",
-      "type": "Microsoft.Network/loadBalancers/backendAddressPools",
-      "apiVersion": "2020-04-01",
-      "name": "[concat(parameters('externalLoadBalancerName'), '/dnsfwd')]",
-      "dependsOn": [
-        "[parameters('externalLoadBalancerName')]"
-      ],
-      "properties": {
-        "loadBalancerBackendAddresses": []
       }
     },
     {
