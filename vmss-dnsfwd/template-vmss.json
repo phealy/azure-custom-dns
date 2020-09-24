@@ -416,7 +416,6 @@
         },
         "overprovision": true,
         "doNotRunExtensionsOnOverprovisionedVMs": false,
-        "zoneBalance": false,
         "platformFaultDomainCount": 1,
         "automaticRepairsPolicy": {
           "enabled": false,
