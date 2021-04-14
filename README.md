@@ -64,4 +64,4 @@ This policy will ensure that all virtual networks deployed have the DNS servers 
 
 ## On-premises DNS setup
 
-Also provided is [a script](ad-dns/Add-AzureDNSFowarderZones.ps1) that will forward all currently used Azure Private Link DNS domains from an on-premises Active Directory DNS server to the forwarders deployed above. If you create custom private DNS zones in Azure, you will need to set your forwarding up in the same way if you want them resolvable from on premises.
+Also provided is [a script](ad-dns-script/Add-AzureDNSFowarderZones.ps1) that will forward all currently used Azure Private Link DNS domains from an on-premises Active Directory DNS server to the forwarders deployed above. If you create custom private DNS zones in Azure, you will need to set your forwarding up in the same way if you want them resolvable from on premises.
